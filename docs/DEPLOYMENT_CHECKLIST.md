@@ -5,8 +5,10 @@ resolved; items marked **should** are strongly recommended but won't
 outright break the product if missed.
 
 ## Infrastructure
-- [ ] **BLOCKER** — Docker vs. embedded Postgres decided (ADR-002)
-- [ ] Migrations tooling chosen and wired into `recap init`
+- [ ] Docker Compose (`postgres:16`), daemon-managed lifecycle —
+      decided, ADR-002; still needs to be built
+- [ ] Migrations tooling (`golang-migrate`, ADR-007) wired into
+      `recap init`
 - [ ] Daemon starts, holds connection pool, survives basic kill/restart
 - [ ] `recap export` / `import` tested against a real project's data
 
@@ -18,24 +20,29 @@ outright break the product if missed.
       verified
 - [ ] **BLOCKER** — confirm no unsanitized user input (branch names, file
       paths, search queries) reaches raw SQL or a shell command
-- [ ] Secret-filtering regex set reviewed and documented as a known,
-      partial mitigation (not a guarantee) in user-facing docs
+- [ ] Secret-filtering regex set **and** filename/path denylist
+      (`.env`, `*.pem`, `credentials.json`, etc. — ADR-006) reviewed and
+      documented as a known, partial mitigation (not a guarantee) in
+      user-facing docs
 
 ## Data model
 - [ ] Unique constraint on `projects.project_key` in place (prevents
       silent project merges)
 - [ ] Cascade/delete behavior confirmed for every foreign key, including
       `record_relationships`
-- [ ] `records.confidence` type/scale finalized
+- [ ] `records.confidence` implemented as enum (`low`/`medium`/`high` —
+      decided, see ARCHITECTURE_DECISIONS.md)
 
 ## Concurrency
-- [ ] **BLOCKER** — concurrent supersede/approve race has a defined,
-      tested resolution (transaction boundaries, `FOR UPDATE` locking)
+- [ ] Concurrent supersede race — resolution decided (`FOR UPDATE` +
+      status recheck, fail clean on conflict — ADR-008); still needs to
+      be implemented and tested
 - [ ] Two simultaneous tool sessions on the same project tested manually
 
 ## Core behavior
-- [ ] **BLOCKER** — "session end" trigger defined and implemented
-      consistently across Claude Code and Codex CLI adapters
+- [ ] "Session end" trigger — decided (explicit-only via `recap save`,
+      see SYSTEM_DESIGN.md "Session boundary"); still needs to be
+      implemented consistently across Claude Code and Codex CLI adapters
 - [ ] MCP tool schema written and versioned
 - [ ] Non-MCP hook contract written (trigger, call signature, failure
       behavior) for tools without MCP support

@@ -6,11 +6,10 @@
 - Confirm one tool can use decisions created by another
 
 ## Phase 1a — PostgreSQL infrastructure
-- Docker Compose setup **or** embedded Postgres — decision required first
-  (see ARCHITECTURE_DECISIONS.md ADR-002, currently a Blocker)
-- Migrations tooling in place (e.g. `sqlx migrate`, `golang-migrate`,
-  `alembic`, depending on language choice — see Open Questions)
-- Daemon with connection pool
+- Docker Compose setup (`postgres:16`), daemon auto-manages container
+  lifecycle (see ARCHITECTURE_DECISIONS.md ADR-002)
+- Migrations tooling: `golang-migrate` (Go — see ADR-007)
+- Daemon with connection pool (fixed default 10, overridable)
 - `recap export` / `import` (`pg_dump`/`pg_restore`)
 
 ## Phase 1b — Core CRUD
@@ -29,14 +28,19 @@
 
 ## Phase 3 — Decision capture
 - Save command, structured draft generation, developer approval
-- Capture Git branch, commit, changed files
-- **Blocker:** "session end" trigger is undefined (explicit command? idle
-  timeout? process exit?) — this phase can't be built until it's decided.
+- Capture Git branch, commit, changed files (Git-detected, not
+  self-reported by the AI tool)
+- Session end is explicit-only: triggered solely by `recap save`, no idle
+  timeout or process-exit heuristic (resolved, see SYSTEM_DESIGN.md
+  "Session boundary")
 
 ## Phase 4 — Context search
-- `tsvector` full-text search, GIN index
+- `tsvector` full-text search, GIN index, single scored SQL query merging
+  `ts_rank` with boosts (see SYSTEM_DESIGN.md "Search")
 - Project/branch/file filters, relevance + recency ranking
-- Context size limits — needs a concrete N/token budget, not just "small"
+- Context size limit: default 5 records **and** ~2000-token ceiling,
+  whichever hits first, both configurable (resolved, see SYSTEM_DESIGN.md
+  "Search")
 
 ## Phase 5 — Safety and quality
 - Secret filtering (regex-based first pass — known limitation, see
@@ -59,16 +63,21 @@
 
 ## Open questions
 
-- **Docker vs. embedded Postgres** — Blocker, resolve before Phase 1a.
-- Should the daemon auto-manage the Postgres container lifecycle, or does
-  the developer own that separately?
-- Should saving always require an explicit command, or can Recap
-  auto-draft when a session ends (depends on session-end definition
-  above)?
-- How much context should be loaded at session start — concrete limit
-  not yet set.
-- Should file changes be detected via Git or reported by the AI tool
-  itself?
-- How should two contradicting decisions be surfaced/resolved?
-- Language choice: Python, TypeScript, Go, or Rust — affects migrations
-  tooling choice in Phase 1a.
+All items previously listed here are resolved — see
+ARCHITECTURE_DECISIONS.md (ADR-002, ADR-003, ADR-007, ADR-008) and
+SYSTEM_DESIGN.md ("Search", "Session boundary", "Saving a record"):
+
+- Docker vs. embedded Postgres → Docker Compose, daemon-managed (ADR-002)
+- Explicit save vs. auto-draft on session end → explicit-only via
+  `recap save` (SYSTEM_DESIGN.md "Session boundary")
+- Context size limit → 5 records / ~2000 tokens, configurable
+  (SYSTEM_DESIGN.md "Search")
+- File-change detection → Git-detected (SYSTEM_DESIGN.md "Saving a
+  record")
+- Contradicting decisions → surfaced to developer, never auto-resolved
+  (ARCHITECTURE_DECISIONS.md ADR-005)
+- Language choice → Go (ADR-007)
+
+Still genuinely open (not covered by the above): MCP tool schema and the
+non-MCP hook contract — see ARCHITECTURE_DECISIONS.md "Unresolved / not
+yet an ADR" and API_REFERENCE.md.

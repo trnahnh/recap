@@ -6,19 +6,22 @@ code in this repository.
 ## Project status — read this first
 
 Recap is **pre-implementation**. What exists today is the PRD and the `docs/`
-set; no language has been chosen and no schema has been created yet. Do not
-assume a stack, scaffold a repo shape, or pick a database driver on your own —
-check `docs/ARCHITECTURE_DECISIONS.md` and `docs/ROADMAP.md` first, and if a
+set; no schema has been created yet. Do not assume a stack, scaffold a repo
+shape, or pick a database driver on your own — check
+`docs/ARCHITECTURE_DECISIONS.md` and `docs/ROADMAP.md` first, and if a
 decision marked **OPEN** there hasn't been resolved, ask rather than guessing.
 
-Two decisions are explicitly open and must not be silently resolved by
-Claude Code:
+The two decisions previously called out here as explicitly open are now
+resolved (see ARCHITECTURE_DECISIONS.md ADR-002, ADR-007):
 
-- **Language** (Python / TypeScript / Go / Rust) — affects migrations
-  tooling, daemon implementation, and CLI packaging. Not yet chosen.
-- **Docker vs. embedded PostgreSQL** — the PRD defaults to Docker for v1,
-  but this is flagged as needing explicit confirmation before Phase 1a
-  starts, not a settled fact.
+- **Language:** Go — single-binary packaging, `pgx`/`golang-migrate` for
+  Postgres/migrations.
+- **Postgres install:** Dockerized (`postgres:16` via Docker Compose),
+  daemon auto-manages the container lifecycle.
+
+Remaining genuinely open items: the MCP tool schema and the non-MCP hook
+contract — see `docs/ARCHITECTURE_DECISIONS.md` ("Unresolved / not yet an
+ADR") and `docs/API_REFERENCE.md`.
 
 ## What Recap is
 
@@ -68,11 +71,11 @@ These come directly from the PRD (`docs/ARCHITECTURE_DECISIONS.md`,
 
 ## Commands
 
-Not yet defined — no language has been chosen. Once Phase 1a starts, this
-section should be filled in with the real install/dev/test commands (mirror
-the structure of a typical `## Commands` section: install, dev, build,
-typecheck/lint, test, run from repo root, per-package variants if the repo
-ends up as a workspace).
+Not yet defined — no code exists yet, though the language is now decided
+(Go, see ADR-007). Once Phase 1a starts, this section should be filled in
+with the real install/dev/test commands (mirror the structure of a typical
+`## Commands` section: install, dev, build, typecheck/lint, test, run from
+repo root, per-package variants if the repo ends up as a workspace).
 
 ## Reference docs
 
