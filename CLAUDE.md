@@ -71,11 +71,36 @@ These come directly from the PRD (`docs/ARCHITECTURE_DECISIONS.md`,
 
 ## Commands
 
-Not yet defined — no code exists yet, though the language is now decided
-(Go, see ADR-007). Once Phase 1a starts, this section should be filled in
-with the real install/dev/test commands (mirror the structure of a typical
-`## Commands` section: install, dev, build, typecheck/lint, test, run from
-repo root, per-package variants if the repo ends up as a workspace).
+Go module `github.com/trnahnh/recap`. Requires Go 1.25+ and Docker (with the
+`docker compose` plugin) running — the daemon shells out to Compose to manage
+the `postgres:16` container. Run all commands from the repo root.
+
+```
+go mod tidy            # sync dependencies
+go build ./...         # build every package
+go vet ./...           # static checks (no separate linter wired yet)
+go test ./...          # run tests (suite not written yet)
+go run ./cmd/recap ... # run the CLI without installing
+go build -o bin/recap ./cmd/recap   # produce the single binary
+```
+
+CLI lifecycle (Phase 1a; later phases add save/list/search/etc.):
+
+```
+recap init     # generate config (0600, random credential), start Postgres, migrate
+recap start    # start Postgres for an already-initialized install
+recap stop     # stop the container (named volume recap_pgdata persists data)
+recap status   # report daemon/DB health
+```
+
+All commands accept `--config <path>` to override the default config location
+(`os.UserConfigDir()/recap/config.json`). Migrations are embedded in the binary
+(`migrations/*.sql` via `//go:embed`) and applied by the daemon on start — no
+separate `migrate` CLI needed.
+
+Layout: `cmd/recap` (CLI entry), `internal/config` (config + credential),
+`internal/db` (pool, loopback assertion, migration runner), `internal/daemon`
+(container lifecycle + orchestration), `migrations` (SQL + embed).
 
 ## Reference docs
 
@@ -103,6 +128,24 @@ source of truth, not this file:
 - `docs/CHANGELOG.md` — what changed between PRD revisions and why (e.g. the
   SQLite → PostgreSQL switch).
 
+## Code style
+
+Keep the codebase comment-free. Do not add `//`, `#`, or SQL `--` comments to
+explain what code does — write self-documenting code (clear names, small
+functions) instead. The only comments allowed are ones the toolchain requires,
+e.g. `//go:embed` directives and build tags. The "why" behind a non-obvious
+decision belongs in `docs/` (an ADR or SYSTEM_DESIGN.md), not inline. This
+applies to all source and config files (Go, SQL migrations, YAML, Dockerfiles).
+
+## Git
+
+- Do not add AI attribution to commits or PRs — no `Co-Authored-By: Claude`
+  trailer, no `Claude-Session` trailer, no "Generated with Claude" line. Commits
+  are authored solely by the human git user.
+- Split work into atomic commits: one logical change per commit, ordered so
+  dependencies land before the code that uses them.
+- Only commit or push when explicitly asked.
+
 ## Markdown & docs
 
 Keep `docs/*.md` consistent with the existing set: one H1 per file, sections
@@ -111,8 +154,10 @@ open items marked as needing confirmation rather than silently decided).
 
 ## Session log
 
-Once implementation starts, adopt a `SESSION.md` (gitignored) scratchpad
-convention: what's in flight, key decisions made this session, verification
-status, and next steps. Update it after finishing any implementation task,
-before reporting the work done — this is what lets work survive a
-context-window compaction. Prune stale entries as you go.
+`SESSION.md` (gitignored) records the latest, most recent finished state
+locally — a compact snapshot of where the code is right now, not a running
+history. It is distinct from `docs/ROADMAP.md`, which is the forward plan (to
+be broken down into dividable tasks). Overwrite it to reflect the current
+finished state after each implementation task, before reporting the work done —
+this is what lets work survive a context-window compaction. Keep it short; do
+not accumulate stale entries.
