@@ -4,14 +4,14 @@
 
 | Metric | Target | Status / caveat |
 |---|---|---|
-| Install time | Under 5 minutes | Conditional on Docker already installed, until ADR-002 resolved |
+| Install time | Under 5 minutes | Conditional on Docker already installed |
 | Cross-tool handoff | A decision saved from one tool loads in another | Core value prop — must be validated end-to-end, not just unit tested |
 | Repeated-context reduction | Developer doesn't re-explain known decisions | Qualitative — needs real usage, not just a demo |
 | Search relevance | Results usually match the current task | See eval set below — currently no regression check exists |
 | Retrieval latency | Under 1 second | Measured through the daemon's connection pool, not a cold-start connection. No query plan validated yet at scale (10k+ records) |
 | Correction ability | Developer can edit/delete inaccurate records | Straightforward CRUD, low risk |
-| Context size | Stays within a configurable limit | No concrete default number set yet — Fix-before-v1 |
-| Network isolation | No external calls required for normal use | Docker image pull happens once at install, not runtime — confirm this holds with embedded Postgres path too |
+| Context size | Stays within a configurable limit | Default 5 records / ~2000 tokens, whichever hits first, both configurable (SYSTEM_DESIGN.md "Search") |
+| Network isolation | No external calls required for normal use | Docker image pull happens once at install, not runtime |
 
 ## Retrieval quality eval (missing — needs to be built)
 

@@ -18,12 +18,11 @@ v1 targets **one developer, one computer**.
    ```
    recap init
    ```
-3. Recap registers the project and connects to a local PostgreSQL
-   instance (Docker or embedded — see ARCHITECTURE_DECISIONS.md ADR-002,
-   still open).
+3. Recap registers the project and connects to a local Dockerized
+   PostgreSQL instance (see ARCHITECTURE_DECISIONS.md ADR-002).
 
 > Install target is under 5 minutes — conditional on Docker already being
-> installed, until ADR-002 is resolved.
+> installed.
 
 ## Daily workflow
 

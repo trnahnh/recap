@@ -22,10 +22,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   flagged as a real portability risk.
 
 ### Open (not yet decided — tracked in ROADMAP.md)
-- Docker-based vs. embedded PostgreSQL install path (ADR-002)
-- Language choice for daemon/CLI (Python / TypeScript / Go / Rust)
-- Session-end trigger definition
 - MCP tool schema (see API_REFERENCE.md)
+- Non-MCP hook contract (see API_REFERENCE.md)
 
 ---
 

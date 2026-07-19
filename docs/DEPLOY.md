@@ -6,13 +6,9 @@ a single developer machine — there is no hosted/cloud version in v1.
 ## Prerequisites
 
 - Git
-- Either Docker (if ADR-002 resolves to Dockerized Postgres) **or** no
-  extra prerequisite (if embedded Postgres is chosen instead)
+- Docker (with the `docker compose` plugin)
 
-> This decision is currently open — see ARCHITECTURE_DECISIONS.md
-> ADR-002. Nothing below can be finalized until it's made.
-
-## Install (Docker path, if chosen)
+## Install
 
 ```
 recap init
@@ -28,26 +24,19 @@ This will:
 5. Start the Recap daemon (persistent, connection-pooled).
 6. Offer to configure supported AI tools (Claude Code, Codex CLI).
 
-## Install (embedded path, if chosen instead)
-
-TBD — depends on ADR-002. Would bundle a Postgres binary with the CLI
-itself, removing the Docker dependency at the cost of per-OS packaging
-work.
-
 ## Security defaults on install
 
 - Postgres binds to `127.0.0.1` only — enforced at daemon startup, not
   just documented.
 - Password auth required (`trust` auth explicitly disabled).
 - No external network calls at runtime; the only network activity is the
-  one-time Docker image pull at install (Docker path only).
+  one-time Docker image pull at install.
 
 ## Uninstall / data removal
 
 - `recap delete <project>` removes all records for a project.
-- Full removal: stop the daemon, remove the Postgres container/data
-  volume (Docker path) or the embedded data directory, delete
-  `~/.recap/`.
+- Full removal: stop the daemon, remove the Postgres container and data
+  volume, delete `~/.recap/`.
 
 ## Backup before uninstall or machine switch
 
