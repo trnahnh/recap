@@ -1,0 +1,17 @@
+SESSION.md
+
+/bin/
+/dist/
+/recap
+/recap.exe
+
+config.json
+*.local.json
+
+*.test
+*.out
+coverage.*
+
+.DS_Store
+.idea/
+.vscode/
