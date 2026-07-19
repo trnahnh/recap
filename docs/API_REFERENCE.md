@@ -55,27 +55,36 @@ introducing a separate surface to maintain.
 
 ## Data format for records (from PRD §10 — this part IS specified)
 
+Implemented in `internal/model` (issue #1). The structs map
+`migrations/000001_init.up.sql` one-for-one; the shape below is the shared
+representation both MCP tools and hook adapters read/write. A `?` marks a
+nullable field, omitted from JSON when absent.
+
 ```
 record {
-  id
-  project_id
-  session_id
+  id                 # uuid, DB-assigned
+  project_id         # uuid
+  session_id?        # uuid, nullable — no session model in v1
   record_type: decision | failed_attempt | constraint | discovery | open_question
   title
   task
   summary
-  chosen_approach
-  rationale
+  chosen_approach?
+  rationale?
   status: draft | active | superseded | archived | invalid
-  confidence        # type/scale not yet finalized
+  confidence?        # float in [0,1], nullable
   created_by
   created_at
   updated_at
-  alternatives: [{ approach, result, reason }]
-  files: [{ file_path, commit_hash }]
-  relationships: [{ target_record_id, relationship_type }]
+  alternatives:  [{ id, record_id, approach, result?, reason?, position }]
+  files:         [{ id, record_id, file_path, commit_hash? }]
+  relationships: [{ id, record_id, target_record_id, relationship_type, created_at }]
 }
 ```
 
-This is the shared format both MCP tools and hook-based adapters should
-read/write once their contracts are defined above.
+Enum values equal the Postgres enum labels byte-for-byte. `confidence` is a
+nullable float constrained to 0..1 (finalized in issue #1). Child collections
+carry their own `id` and owning `record_id` so a single alternative, file, or
+relationship can be addressed for edit/delete, and serialize as `[]` when
+empty, never `null` — a superset of the original PRD sketch, which omitted
+child ids and `alternatives.position`.
