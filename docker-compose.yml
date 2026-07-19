@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: recap-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${RECAP_DB_USER}
+      POSTGRES_PASSWORD: ${RECAP_DB_PASSWORD}
+      POSTGRES_DB: ${RECAP_DB_NAME}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "127.0.0.1:${RECAP_DB_PORT}:5432"
+    volumes:
+      - recap_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${RECAP_DB_USER} -d ${RECAP_DB_NAME}"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  recap_pgdata:
+    name: recap_pgdata
