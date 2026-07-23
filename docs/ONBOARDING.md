@@ -55,9 +55,12 @@ recap archive 15
 ## Exporting / moving machines
 
 ```
-recap export
-recap import
+recap export [--out <file>]
+recap import <file>
 ```
+
+`export` writes `./recap-export-<timestamp>.dump` by default; pass `--out`
+to choose the path. `import` takes the dump file as its argument.
 
 Since storage is local-only, this is the only way to carry your decision
 history to another machine. Do this before wiping or switching computers.

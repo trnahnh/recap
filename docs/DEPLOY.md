@@ -41,8 +41,9 @@ This will:
 ## Backup before uninstall or machine switch
 
 ```
-recap export
+recap export [--out <file>]
 ```
 
-Wraps `pg_dump`. Keep the export file somewhere outside `~/.recap/`
-if you're about to wipe the machine.
+Wraps `pg_dump`, writing `./recap-export-<timestamp>.dump` by default (or the
+`--out` path). Restore later with `recap import <file>`. Keep the export file
+somewhere outside `~/.recap/` if you're about to wipe the machine.

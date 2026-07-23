@@ -18,8 +18,8 @@ recap show <id>               # view a record
 recap edit <id>                # edit a record
 recap delete <id>              # delete a record
 recap archive <id>             # archive a record
-recap export                  # pg_dump wrapper
-recap import                  # pg_restore wrapper
+recap export [--out <file>]   # pg_dump wrapper (default: ./recap-export-<timestamp>.dump)
+recap import <file>           # pg_restore wrapper
 ```
 
 ## MCP interface — NOT YET DEFINED
