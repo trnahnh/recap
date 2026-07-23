@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/trnahnh/recap/internal/config"
 	"github.com/trnahnh/recap/internal/daemon"
@@ -58,6 +59,10 @@ func run(args []string) error {
 		return withConfigPath(rest, func(path string) error {
 			return printStatus(ctx, path)
 		})
+	case "export":
+		return runExport(ctx, rest)
+	case "import":
+		return runImport(ctx, rest)
 	case "-h", "--help", "help":
 		usage()
 		return nil
@@ -66,19 +71,65 @@ func run(args []string) error {
 	}
 }
 
+func runExport(ctx context.Context, args []string) error {
+	fs := flag.NewFlagSet("recap export", flag.ContinueOnError)
+	custom := fs.String("config", "", "path to config file (default: OS config dir)")
+	out := fs.String("out", "", "output file (default: ./recap-export-<timestamp>.dump)")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	path, err := resolveConfigPath(*custom)
+	if err != nil {
+		return err
+	}
+	outPath := *out
+	if outPath == "" {
+		outPath = fmt.Sprintf("recap-export-%s.dump", time.Now().UTC().Format("20060102T150405Z"))
+	}
+	if err := daemon.Export(ctx, path, outPath); err != nil {
+		return err
+	}
+	fmt.Printf("exported to %s\n", outPath)
+	return nil
+}
+
+func runImport(ctx context.Context, args []string) error {
+	fs := flag.NewFlagSet("recap import", flag.ContinueOnError)
+	custom := fs.String("config", "", "path to config file (default: OS config dir)")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	if fs.NArg() < 1 {
+		return fmt.Errorf("usage: recap import <file> [--config <path>]")
+	}
+	inPath := fs.Arg(0)
+	path, err := resolveConfigPath(*custom)
+	if err != nil {
+		return err
+	}
+	if err := daemon.Import(ctx, path, inPath); err != nil {
+		return err
+	}
+	fmt.Printf("imported from %s\n", inPath)
+	return nil
+}
+
+func resolveConfigPath(custom string) (string, error) {
+	if custom != "" {
+		return custom, nil
+	}
+	return config.DefaultPath()
+}
+
 func withConfigPath(args []string, fn func(path string) error) error {
 	fs := flag.NewFlagSet("recap", flag.ContinueOnError)
 	custom := fs.String("config", "", "path to config file (default: OS config dir)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	path := *custom
-	if path == "" {
-		def, err := config.DefaultPath()
-		if err != nil {
-			return err
-		}
-		path = def
+	path, err := resolveConfigPath(*custom)
+	if err != nil {
+		return err
 	}
 	return fn(path)
 }
@@ -107,13 +158,15 @@ func usage() {
 Usage:
   recap <command> [--config <path>]
 
-Commands (Phase 1a):
+Commands:
   init      generate config, start Postgres, apply migrations
   start     start the database for an initialized install
   stop      stop the database (data is preserved)
   status    report daemon/database health
+  export    back up all data via pg_dump (--out <file>)
+  import    restore data from a dump via pg_restore (import <file>)
   help      show this message
 
-Later phases add: save, list, search, show, edit, delete, archive, export, import.
+Later phases add: save, list, search, show, edit, delete, archive.
 `)
 }
