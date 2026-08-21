@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"errors"
 	"os"
 	"runtime"
@@ -122,7 +121,10 @@ func TestDeleteProjectCascadesToRecords(t *testing.T) {
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
-	recordID := insertRecordDirect(ctx, t, s, project.ID)
+	record, err := s.CreateRecord(ctx, draftRecord(project.ID))
+	if err != nil {
+		t.Fatalf("create record: %v", err)
+	}
 
 	if err := s.DeleteProject(ctx, project.ID); err != nil {
 		t.Fatalf("delete: %v", err)
@@ -130,7 +132,7 @@ func TestDeleteProjectCascadesToRecords(t *testing.T) {
 
 	var remaining int
 	if err := s.pool.QueryRow(ctx,
-		`SELECT count(*) FROM records WHERE id = $1`, recordID,
+		`SELECT count(*) FROM records WHERE id = $1`, record.ID,
 	).Scan(&remaining); err != nil {
 		t.Fatalf("count records: %v", err)
 	}
@@ -152,17 +154,4 @@ func TestProjectNotFound(t *testing.T) {
 	if err := s.DeleteProject(ctx, missing); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("delete: expected ErrNotFound, got %v", err)
 	}
-}
-
-func insertRecordDirect(ctx context.Context, t *testing.T, s *Store, projectID string) string {
-	t.Helper()
-	var id string
-	if err := s.pool.QueryRow(ctx,
-		`INSERT INTO records (project_id, record_type, title, task, summary, created_by)
-		 VALUES ($1, 'decision', $2, $3, $4, $5) RETURNING id`,
-		projectID, "seed", "seed task", "seed summary", "store-test",
-	).Scan(&id); err != nil {
-		t.Fatalf("seed record: %v", err)
-	}
-	return id
 }
