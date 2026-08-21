@@ -79,7 +79,7 @@ the `postgres:16` container. Run all commands from the repo root.
 go mod tidy            # sync dependencies
 go build ./...         # build every package
 go vet ./...           # static checks (no separate linter wired yet)
-go test ./...          # run tests (suite not written yet)
+go test ./...          # run tests (integration tests skip unless gated, below)
 go run ./cmd/recap ... # run the CLI without installing
 go build -o bin/recap ./cmd/recap   # produce the single binary
 ```
@@ -98,9 +98,20 @@ All commands accept `--config <path>` to override the default config location
 (`migrations/*.sql` via `//go:embed`) and applied by the daemon on start — no
 separate `migrate` CLI needed.
 
+Store integration tests are skipped by default. To run them, `recap init` (or
+`recap start`) first, then set `RECAP_INTEGRATION=1`. Each run creates a
+throwaway `recap_test_<rand>` database on the dev container, migrates it, and
+drops it afterwards — your real `recap` database is never touched. Point them
+at a non-default config with `RECAP_TEST_CONFIG=<path>`.
+
+```
+RECAP_INTEGRATION=1 go test ./internal/store/
+```
+
 Layout: `cmd/recap` (CLI entry), `internal/config` (config + credential),
 `internal/db` (pool, loopback assertion, migration runner), `internal/daemon`
-(container lifecycle + orchestration), `migrations` (SQL + embed).
+(container lifecycle + orchestration), `internal/model` (shared record format),
+`internal/store` (pgx CRUD over the models), `migrations` (SQL + embed).
 
 ## Reference docs
 

@@ -8,55 +8,55 @@ import (
 )
 
 type Project struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	RootPath  string    `json:"root_path"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string    `json:"id" db:"id"`
+	Name      string    `json:"name" db:"name"`
+	RootPath  string    `json:"root_path" db:"root_path"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type Record struct {
-	ID             string         `json:"id"`
-	ProjectID      string         `json:"project_id"`
-	SessionID      *string        `json:"session_id,omitempty"`
-	RecordType     RecordType     `json:"record_type"`
-	Title          string         `json:"title"`
-	Task           string         `json:"task"`
-	Summary        string         `json:"summary"`
-	ChosenApproach *string        `json:"chosen_approach,omitempty"`
-	Rationale      *string        `json:"rationale,omitempty"`
-	Status         RecordStatus   `json:"status"`
-	Confidence     *float32       `json:"confidence,omitempty"`
-	CreatedBy      string         `json:"created_by"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	Alternatives   []Alternative  `json:"alternatives"`
-	Files          []RecordFile   `json:"files"`
-	Relationships  []Relationship `json:"relationships"`
+	ID             string         `json:"id" db:"id"`
+	ProjectID      string         `json:"project_id" db:"project_id"`
+	SessionID      *string        `json:"session_id,omitempty" db:"session_id"`
+	RecordType     RecordType     `json:"record_type" db:"record_type"`
+	Title          string         `json:"title" db:"title"`
+	Task           string         `json:"task" db:"task"`
+	Summary        string         `json:"summary" db:"summary"`
+	ChosenApproach *string        `json:"chosen_approach,omitempty" db:"chosen_approach"`
+	Rationale      *string        `json:"rationale,omitempty" db:"rationale"`
+	Status         RecordStatus   `json:"status" db:"status"`
+	Confidence     *float32       `json:"confidence,omitempty" db:"confidence"`
+	CreatedBy      string         `json:"created_by" db:"created_by"`
+	CreatedAt      time.Time      `json:"created_at" db:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at" db:"updated_at"`
+	Alternatives   []Alternative  `json:"alternatives" db:"-"`
+	Files          []RecordFile   `json:"files" db:"-"`
+	Relationships  []Relationship `json:"relationships" db:"-"`
 }
 
 type Alternative struct {
-	ID       string  `json:"id"`
-	RecordID string  `json:"record_id"`
-	Approach string  `json:"approach"`
-	Result   *string `json:"result,omitempty"`
-	Reason   *string `json:"reason,omitempty"`
-	Position int     `json:"position"`
+	ID       string  `json:"id" db:"id"`
+	RecordID string  `json:"record_id" db:"record_id"`
+	Approach string  `json:"approach" db:"approach"`
+	Result   *string `json:"result,omitempty" db:"result"`
+	Reason   *string `json:"reason,omitempty" db:"reason"`
+	Position int     `json:"position" db:"position"`
 }
 
 type RecordFile struct {
-	ID         string  `json:"id"`
-	RecordID   string  `json:"record_id"`
-	FilePath   string  `json:"file_path"`
-	CommitHash *string `json:"commit_hash,omitempty"`
+	ID         string  `json:"id" db:"id"`
+	RecordID   string  `json:"record_id" db:"record_id"`
+	FilePath   string  `json:"file_path" db:"file_path"`
+	CommitHash *string `json:"commit_hash,omitempty" db:"commit_hash"`
 }
 
 type Relationship struct {
-	ID               string           `json:"id"`
-	RecordID         string           `json:"record_id"`
-	TargetRecordID   string           `json:"target_record_id"`
-	RelationshipType RelationshipType `json:"relationship_type"`
-	CreatedAt        time.Time        `json:"created_at"`
+	ID               string           `json:"id" db:"id"`
+	RecordID         string           `json:"record_id" db:"record_id"`
+	TargetRecordID   string           `json:"target_record_id" db:"target_record_id"`
+	RelationshipType RelationshipType `json:"relationship_type" db:"relationship_type"`
+	CreatedAt        time.Time        `json:"created_at" db:"created_at"`
 }
 
 func NewRecord() Record {
