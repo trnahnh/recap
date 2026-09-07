@@ -75,6 +75,15 @@ the next tool to consume.
 for a second tool to later flag that an approved record no longer matches
 reality (see RISKS in SYSTEM_DESIGN.md).
 
+**Status lifecycle (implemented in issue #4):** status is only changed by
+explicit store transitions, never by a general update. The allowed moves
+are `draft → active` (approve), `draft | active | superseded → archived`
+(archive), and `draft | active | superseded → invalid` (invalidate).
+`archived` and `invalid` are terminal; anything else is rejected with
+`ErrIllegalTransition`. Every retrieval path (`get_context`, search, the
+hook adapter) goes through `ListRetrievableRecords`, which pins the status
+filter to `active` — the only status the next tool is ever shown.
+
 **Related decision — conflicting records:** when retrieval finds two
 active records that contradict each other, surface both to the developer/
 AI tool explicitly rather than auto-resolving (e.g. auto-superseding the
