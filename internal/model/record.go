@@ -33,6 +33,8 @@ type Record struct {
 	Alternatives   []Alternative  `json:"alternatives" db:"-"`
 	Files          []RecordFile   `json:"files" db:"-"`
 	Relationships  []Relationship `json:"relationships" db:"-"`
+
+	IncomingRelationships []Relationship `json:"incoming_relationships" db:"-"`
 }
 
 type Alternative struct {
@@ -61,10 +63,11 @@ type Relationship struct {
 
 func NewRecord() Record {
 	return Record{
-		Status:        RecordStatusDraft,
-		Alternatives:  []Alternative{},
-		Files:         []RecordFile{},
-		Relationships: []Relationship{},
+		Status:                RecordStatusDraft,
+		Alternatives:          []Alternative{},
+		Files:                 []RecordFile{},
+		Relationships:         []Relationship{},
+		IncomingRelationships: []Relationship{},
 	}
 }
 
@@ -118,6 +121,11 @@ func (r *Record) Validate() error {
 	for i := range r.Relationships {
 		if err := r.Relationships[i].validate(); err != nil {
 			return fmt.Errorf("model: relationship %d: %w", i, err)
+		}
+	}
+	for i := range r.IncomingRelationships {
+		if err := r.IncomingRelationships[i].validate(); err != nil {
+			return fmt.Errorf("model: incoming relationship %d: %w", i, err)
 		}
 	}
 	return nil
