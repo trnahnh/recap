@@ -17,12 +17,14 @@ Detects your Git repo, starts a local PostgreSQL instance, sets up the daemon. U
 ### Usage
 
 ```bash
+recap project add             # register this repo once
 recap save                    # save a decision from the current session
 recap list                    # see what's saved for this project
 recap search "retry logic"    # find a past decision
-recap show 15                 # view one in full
-recap edit 15                 # correct it
-recap archive 15              # mark it superseded
+recap show <id>               # view one in full
+recap approve <id>            # approve a draft so tools can retrieve it
+recap edit <id>               # correct it
+recap archive <id>            # retire it
 recap export                  # back up before switching machines
 ```
 

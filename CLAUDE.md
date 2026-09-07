@@ -84,13 +84,17 @@ go run ./cmd/recap ... # run the CLI without installing
 go build -o bin/recap ./cmd/recap   # produce the single binary
 ```
 
-CLI lifecycle (Phase 1a; later phases add save/list/search/etc.):
+CLI (Phase 1a lifecycle + Phase 1b record management; later phases add
+save/search):
 
 ```
 recap init     # generate config (0600, random credential), start Postgres, migrate
 recap start    # start Postgres for an already-initialized install
 recap stop     # stop the container (named volume recap_pgdata persists data)
 recap status   # report daemon/DB health
+recap export / import              # pg_dump / pg_restore wrappers
+recap project add [path] / list    # register the project for a directory
+recap list / show / approve / edit / archive / delete <id>   # --project <path>
 ```
 
 All commands accept `--config <path>` to override the default config location
@@ -98,20 +102,23 @@ All commands accept `--config <path>` to override the default config location
 (`migrations/*.sql` via `//go:embed`) and applied by the daemon on start — no
 separate `migrate` CLI needed.
 
-Store integration tests are skipped by default. To run them, `recap init` (or
-`recap start`) first, then set `RECAP_INTEGRATION=1`. Each run creates a
-throwaway `recap_test_<rand>` database on the dev container, migrates it, and
-drops it afterwards — your real `recap` database is never touched. Point them
-at a non-default config with `RECAP_TEST_CONFIG=<path>`.
+Integration tests (store and CLI) are skipped by default. To run them,
+`recap init` (or `recap start`) first, then set `RECAP_INTEGRATION=1`. The
+shared harness in `internal/testdb` creates a throwaway `recap_test_<rand>`
+database on the dev container per test, migrates it, and drops it afterwards
+— your real `recap` database is never touched. Point it at a non-default
+config with `RECAP_TEST_CONFIG=<path>`.
 
 ```
-RECAP_INTEGRATION=1 go test ./internal/store/
+RECAP_INTEGRATION=1 go test ./...
 ```
 
 Layout: `cmd/recap` (CLI entry), `internal/config` (config + credential),
 `internal/db` (pool, loopback assertion, migration runner), `internal/daemon`
 (container lifecycle + orchestration), `internal/model` (shared record format),
-`internal/store` (pgx CRUD over the models), `migrations` (SQL + embed).
+`internal/store` (pgx CRUD, status transitions, supersede over the models),
+`internal/testdb` (integration-test database harness), `migrations` (SQL +
+embed).
 
 ## Reference docs
 
