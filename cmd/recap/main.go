@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"time"
@@ -13,15 +14,15 @@ import (
 )
 
 func main() {
-	if err := run(os.Args[1:]); err != nil {
+	if err := run(os.Args[1:], os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, "recap: "+err.Error())
 		os.Exit(1)
 	}
 }
 
-func run(args []string) error {
+func run(args []string, w io.Writer) error {
 	if len(args) == 0 {
-		usage()
+		usage(w)
 		return nil
 	}
 
@@ -36,7 +37,7 @@ func run(args []string) error {
 			if err := daemon.Init(ctx, path); err != nil {
 				return err
 			}
-			fmt.Println("recap initialized and database ready.")
+			fmt.Fprintln(w, "recap initialized and database ready.")
 			return nil
 		})
 	case "start":
@@ -44,7 +45,7 @@ func run(args []string) error {
 			if err := daemon.Start(ctx, path); err != nil {
 				return err
 			}
-			fmt.Println("recap database started.")
+			fmt.Fprintln(w, "recap database started.")
 			return nil
 		})
 	case "stop":
@@ -52,26 +53,40 @@ func run(args []string) error {
 			if err := daemon.Stop(ctx, path); err != nil {
 				return err
 			}
-			fmt.Println("recap database stopped.")
+			fmt.Fprintln(w, "recap database stopped.")
 			return nil
 		})
 	case "status":
 		return withConfigPath(rest, func(path string) error {
-			return printStatus(ctx, path)
+			return printStatus(ctx, path, w)
 		})
 	case "export":
-		return runExport(ctx, rest)
+		return runExport(ctx, rest, w)
 	case "import":
-		return runImport(ctx, rest)
+		return runImport(ctx, rest, w)
+	case "project":
+		return runProject(ctx, rest, w)
+	case "list":
+		return runList(ctx, rest, w)
+	case "show":
+		return runShow(ctx, rest, w)
+	case "edit":
+		return runEdit(ctx, rest, w)
+	case "delete":
+		return runDelete(ctx, rest, w)
+	case "archive":
+		return runArchive(ctx, rest, w)
+	case "approve":
+		return runApprove(ctx, rest, w)
 	case "-h", "--help", "help":
-		usage()
+		usage(w)
 		return nil
 	default:
 		return fmt.Errorf("unknown command %q (run `recap help`)", cmd)
 	}
 }
 
-func runExport(ctx context.Context, args []string) error {
+func runExport(ctx context.Context, args []string, w io.Writer) error {
 	fs := flag.NewFlagSet("recap export", flag.ContinueOnError)
 	custom := fs.String("config", "", "path to config file (default: OS config dir)")
 	out := fs.String("out", "", "output file (default: ./recap-export-<timestamp>.dump)")
@@ -89,11 +104,11 @@ func runExport(ctx context.Context, args []string) error {
 	if err := daemon.Export(ctx, path, outPath); err != nil {
 		return err
 	}
-	fmt.Printf("exported to %s\n", outPath)
+	fmt.Fprintf(w, "exported to %s\n", outPath)
 	return nil
 }
 
-func runImport(ctx context.Context, args []string) error {
+func runImport(ctx context.Context, args []string, w io.Writer) error {
 	fs := flag.NewFlagSet("recap import", flag.ContinueOnError)
 	custom := fs.String("config", "", "path to config file (default: OS config dir)")
 	if err := fs.Parse(args); err != nil {
@@ -110,7 +125,7 @@ func runImport(ctx context.Context, args []string) error {
 	if err := daemon.Import(ctx, path, inPath); err != nil {
 		return err
 	}
-	fmt.Printf("imported from %s\n", inPath)
+	fmt.Fprintf(w, "imported from %s\n", inPath)
 	return nil
 }
 
@@ -134,39 +149,52 @@ func withConfigPath(args []string, fn func(path string) error) error {
 	return fn(path)
 }
 
-func printStatus(ctx context.Context, path string) error {
+func printStatus(ctx context.Context, path string, w io.Writer) error {
 	r, err := daemon.Status(ctx, path)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("config:   %s\n", r.ConfigPath)
-	fmt.Printf("database: postgres://%s:%d/%s\n", r.Host, r.Port, r.Database)
+	fmt.Fprintf(w, "config:   %s\n", r.ConfigPath)
+	fmt.Fprintf(w, "database: postgres://%s:%d/%s\n", r.Host, r.Port, r.Database)
 	if r.Ready {
-		fmt.Println("status:   ready")
+		fmt.Fprintln(w, "status:   ready")
 	} else {
-		fmt.Println("status:   not ready")
+		fmt.Fprintln(w, "status:   not ready")
 		if r.Detail != "" {
-			fmt.Printf("detail:   %s\n", r.Detail)
+			fmt.Fprintf(w, "detail:   %s\n", r.Detail)
 		}
 	}
 	return nil
 }
 
-func usage() {
-	fmt.Print(`recap — local memory for AI coding tools
+func usage(w io.Writer) {
+	fmt.Fprint(w, `recap — local memory for AI coding tools
 
 Usage:
   recap <command> [--config <path>]
 
-Commands:
+Database:
   init      generate config, start Postgres, apply migrations
   start     start the database for an initialized install
   stop      stop the database (data is preserved)
   status    report daemon/database health
   export    back up all data via pg_dump (--out <file>)
   import    restore data from a dump via pg_restore (import <file>)
+
+Projects:
+  project add [--name <n>] [path]   register a project root (default: cwd)
+  project list                      list registered projects
+
+Records (all accept --project <path>, default: current directory):
+  list      list records (--status a,b --type c,d)
+  show      show a record in full (drafts are marked DRAFT)
+  approve   approve a draft so AI tools can retrieve it
+  edit      edit a record via flags or $EDITOR (edit <id> [--title ...])
+  archive   archive a record
+  delete    delete a record permanently
+
   help      show this message
 
-Later phases add: save, list, search, show, edit, delete, archive.
+Later phases add: save, search.
 `)
 }
