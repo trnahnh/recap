@@ -9,18 +9,30 @@
 ## CLI commands (confirmed in PRD)
 
 ```
-recap init                    # register project, start daemon
+recap init                    # generate config, start Postgres, migrate
 recap status                  # daemon/DB health (proposed, see OBSERVABILITY.md)
+recap project add [path]      # register a project root (default: cwd; --name <n>)
+recap project list            # list registered projects
 recap save                    # create a draft record from current session
-recap list                    # list records
+recap list                    # list records (--status a,b --type c,d)
 recap search "<query>"        # keyword search
-recap show <id>               # view a record
-recap edit <id>                # edit a record
-recap delete <id>              # delete a record
-recap archive <id>             # archive a record
+recap show <id>               # view a record (drafts are marked DRAFT)
+recap approve <id>            # draft -> active; only active records are retrievable
+recap edit <id>               # edit a record (field flags, or $EDITOR over JSON)
+recap delete <id>             # delete a record
+recap archive <id>            # archive a record
 recap export [--out <file>]   # pg_dump wrapper (default: ./recap-export-<timestamp>.dump)
 recap import <file>           # pg_restore wrapper
 ```
+
+Record commands take `--project <path>`; when omitted, the project is
+resolved from the current working directory's registered `root_path`, and
+an unregistered directory is an error that names `recap project add`.
+Record ids are uuids; a malformed or unknown id exits 1 with a clear
+message. `edit` with no field flags opens `$VISUAL`/`$EDITOR` on a JSON
+buffer of the mutable fields (`title`, `task`, `summary`,
+`chosen_approach`, `rationale`, `confidence`); status is never editable
+this way — use `approve` / `archive`.
 
 ## MCP interface — NOT YET DEFINED
 

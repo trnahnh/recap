@@ -44,13 +44,20 @@ gemini.google.com).
 ## Reviewing your project history
 
 ```
-recap list
+recap project add                 # once per repo, from its root
+recap list                        # every record, with its status
+recap list --status draft         # what still needs your approval
 recap search "notification retry"
-recap show 15
-recap edit 15
-recap delete 15
-recap archive 15
+recap show <id>                   # drafts are marked DRAFT
+recap approve <id>                # make a draft retrievable by AI tools
+recap edit <id> --title "..."     # or plain `recap edit <id>` for $EDITOR
+recap delete <id>
+recap archive <id>
 ```
+
+Record ids are uuids (copy them from `recap list`). Commands act on the
+project registered for the current directory; pass `--project <path>` to
+target another one.
 
 ## Exporting / moving machines
 
