@@ -155,6 +155,14 @@ plus one status check and one error message. Two tools operating
 concurrently on the same project is the core use case this product is
 built for, not an edge case to defer past v1.
 
+**Implementation (issue #5):** `Supersede(ctx, projectID, oldID, newID)`
+takes an *existing* replacement record rather than inserting one, so
+`CreateRecord` stays the only insert path and every record still starts
+as a `draft` (ADR-005). In one transaction it locks the old row, requires
+it to be `active`, then marks it `superseded`, writes the `supersedes`
+relationship from new to old, and activates the replacement. A loser in
+the race gets `ErrAlreadySuperseded` naming the winning record id.
+
 ## Unresolved / not yet an ADR
 
 - MCP tool schema — nothing formal defined yet; blocks API_REFERENCE.md
