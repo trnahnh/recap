@@ -23,6 +23,8 @@ type RecordFilter struct {
 	RecordTypes []model.RecordType
 }
 
+var retrievableStatuses = []model.RecordStatus{model.RecordStatusActive}
+
 func (s *Store) CreateRecord(ctx context.Context, record model.Record) (model.Record, error) {
 	record.Status = model.RecordStatusDraft
 	if err := record.Validate(); err != nil {
@@ -83,18 +85,17 @@ func (s *Store) GetRecord(ctx context.Context, projectID, recordID string) (mode
 			return fmt.Errorf("store: scanning record: %w", err)
 		}
 
-		if record.Alternatives, err = loadAlternatives(ctx, tx, record.ID); err != nil {
-			return err
-		}
-		if record.Files, err = loadRecordFiles(ctx, tx, record.ID); err != nil {
-			return err
-		}
-		return loadRelationships(ctx, tx, &record)
+		return loadChildren(ctx, tx, &record)
 	})
 	if err != nil {
 		return model.Record{}, err
 	}
 	return record, nil
+}
+
+func (s *Store) ListRetrievableRecords(ctx context.Context, projectID string, filter RecordFilter) ([]model.Record, error) {
+	filter.Statuses = retrievableStatuses
+	return s.ListRecords(ctx, projectID, filter)
 }
 
 func (s *Store) UpdateRecord(ctx context.Context, record model.Record) (model.Record, error) {
@@ -242,6 +243,17 @@ func insertRecordFiles(ctx context.Context, tx pgx.Tx, recordID string, in []mod
 		out = append(out, file)
 	}
 	return out, nil
+}
+
+func loadChildren(ctx context.Context, tx pgx.Tx, record *model.Record) error {
+	var err error
+	if record.Alternatives, err = loadAlternatives(ctx, tx, record.ID); err != nil {
+		return err
+	}
+	if record.Files, err = loadRecordFiles(ctx, tx, record.ID); err != nil {
+		return err
+	}
+	return loadRelationships(ctx, tx, record)
 }
 
 func loadAlternatives(ctx context.Context, tx pgx.Tx, recordID string) ([]model.Alternative, error) {
