@@ -73,18 +73,18 @@ func NewRecord() Record {
 
 var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 
-func validUUID(s string) bool {
+func IsUUID(s string) bool {
 	return uuidPattern.MatchString(s)
 }
 
 func (r *Record) Validate() error {
-	if r.ID != "" && !validUUID(r.ID) {
+	if r.ID != "" && !IsUUID(r.ID) {
 		return fmt.Errorf("model: record id %q is not a valid uuid", r.ID)
 	}
-	if !validUUID(r.ProjectID) {
+	if !IsUUID(r.ProjectID) {
 		return fmt.Errorf("model: project_id %q is not a valid uuid", r.ProjectID)
 	}
-	if r.SessionID != nil && !validUUID(*r.SessionID) {
+	if r.SessionID != nil && !IsUUID(*r.SessionID) {
 		return fmt.Errorf("model: session_id %q is not a valid uuid", *r.SessionID)
 	}
 	if !r.RecordType.Valid() {
@@ -132,10 +132,10 @@ func (r *Record) Validate() error {
 }
 
 func (a *Alternative) validate() error {
-	if a.ID != "" && !validUUID(a.ID) {
+	if a.ID != "" && !IsUUID(a.ID) {
 		return fmt.Errorf("id %q is not a valid uuid", a.ID)
 	}
-	if a.RecordID != "" && !validUUID(a.RecordID) {
+	if a.RecordID != "" && !IsUUID(a.RecordID) {
 		return fmt.Errorf("record_id %q is not a valid uuid", a.RecordID)
 	}
 	if strings.TrimSpace(a.Approach) == "" {
@@ -145,10 +145,10 @@ func (a *Alternative) validate() error {
 }
 
 func (f *RecordFile) validate() error {
-	if f.ID != "" && !validUUID(f.ID) {
+	if f.ID != "" && !IsUUID(f.ID) {
 		return fmt.Errorf("id %q is not a valid uuid", f.ID)
 	}
-	if f.RecordID != "" && !validUUID(f.RecordID) {
+	if f.RecordID != "" && !IsUUID(f.RecordID) {
 		return fmt.Errorf("record_id %q is not a valid uuid", f.RecordID)
 	}
 	if strings.TrimSpace(f.FilePath) == "" {
@@ -158,13 +158,13 @@ func (f *RecordFile) validate() error {
 }
 
 func (rel *Relationship) validate() error {
-	if rel.ID != "" && !validUUID(rel.ID) {
+	if rel.ID != "" && !IsUUID(rel.ID) {
 		return fmt.Errorf("id %q is not a valid uuid", rel.ID)
 	}
-	if rel.RecordID != "" && !validUUID(rel.RecordID) {
+	if rel.RecordID != "" && !IsUUID(rel.RecordID) {
 		return fmt.Errorf("record_id %q is not a valid uuid", rel.RecordID)
 	}
-	if !validUUID(rel.TargetRecordID) {
+	if !IsUUID(rel.TargetRecordID) {
 		return fmt.Errorf("target_record_id %q is not a valid uuid", rel.TargetRecordID)
 	}
 	if !rel.RelationshipType.Valid() {
